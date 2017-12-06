@@ -314,7 +314,7 @@ int main() {
               double shift_y = ptsy[i] - ref_y;
 
               ptsx[i] = (shift_x *cos(0-ref_yaw) - shift_y *sin(0-ref_yaw));
-              ptsy[i] = (shift_y *sin(0-ref_yaw) + shift_y *cos(0-ref_yaw));
+              ptsy[i] = (shift_x *sin(0-ref_yaw) + shift_y *cos(0-ref_yaw));
             }
 
             // Create a spline
@@ -337,7 +337,7 @@ int main() {
             // Calculate how to space points so that we travel at our desired reference velocity
             double target_x = 30.0;
             double target_y = s(target_x);
-            double target_dist = sqrt((target_x*target_x)+(target_y*target_y));
+            double target_dist = sqrt((target_x)*(target_x)+(target_y)*(target_y));
 
             double x_add_on = 0;
 
@@ -347,7 +347,7 @@ int main() {
             for(int i=1; i <= 50 - previous_path_x.size(); i++)
             {
               double N = (target_dist/(0.02*ref_vel/2.24));
-              double x_point = x_add_on+(target_x/N);
+              double x_point = x_add_on+(target_x)/N;
               double y_point = s(x_point);
 
               x_add_on = x_point;
