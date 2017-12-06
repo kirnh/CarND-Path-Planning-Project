@@ -168,7 +168,7 @@ vector<double> getXY(double s, double d, const vector<double> &maps_s, const vec
 int lane = 1;
 
 //Have a reference velocity to target
-double ref_vel = 49.5; //mph
+double ref_vel = 0.0; //mph
 
 int main() {
   uWS::Hub h;
@@ -249,6 +249,8 @@ int main() {
             int prev_size = previous_path_x.size();
           	
             // Code to predict the traffic
+            bool too_close = false;
+
             for(int i = 0; i < sensor_fusion.size(); i++)
             {
               double d = sensor_fusion[i][6];
@@ -262,10 +264,20 @@ int main() {
 
                 if((check_car_s > car_s) && (check_car_s - car_s) < 30)
                 {
-                  ref_vel = 29.5;
+                  //ref_vel = 29.5;
+                  too_close = true;
                 }
               }
             }
+
+            // if(too_close)
+            // {
+            //   ref_vel -= 0.224;
+            // }
+            // else if(ref_vel < 49.5)
+            // {
+            //   ref_vel += 0.224;
+            // }
 
             // Create a list of widely spaced (x, y) waypoints, evenly spaced at 30m
             // later we will interpolate these waypoints with a spline and fill it with
@@ -364,6 +376,17 @@ int main() {
             // Also for reference: 1 mph = 1/2.24 m/s = 0.44704 m/s
             for(int i=1; i <= 50 - previous_path_x.size(); i++)
             {
+
+              // increase or decrease velocity gradually depending on whether the car's too close to something else or not
+              if(too_close)
+              {
+                ref_vel -= 0.224; // 5m/s
+              } 
+              else if(ref_vel < 49.5)
+              {
+                ref_vel += 0.224;
+              }
+
               double N = (target_dist/(0.02*ref_vel/2.24));
               double x_point = x_add_on+(target_x)/N;
               double y_point = s(x_point);
