@@ -250,8 +250,7 @@ int main() {
           	
             // Code to predict the traffic
             bool too_close = false;
-            // bool prep_left_lane_change = false;
-            // bool prep_right_lane_change = false;
+            double front_car_speed;
 
             for(int i = 0; i < sensor_fusion.size(); i++)
             {
@@ -267,6 +266,7 @@ int main() {
                 if((check_car_s > car_s) && (check_car_s - car_s) < 40)
                 {
                   too_close = true;
+                  front_car_speed = check_speed;
                 }
               }
             }
@@ -338,11 +338,6 @@ int main() {
               }
             }
               
-            // Speed up if our velocity is less
-            // if(ref_vel < 49.5)              
-            // {
-            //   ref_vel += 0.224;
-            // }
             // Create a list of widely spaced (x, y) waypoints, evenly spaced at 30m
             // later we will interpolate these waypoints with a spline and fill it with
             // more points that control speed.
@@ -388,10 +383,10 @@ int main() {
               ptsy.push_back(ref_y);
             }
 
-            // In Frenet, add evenly 30m spaced points ahead of the starting reference
-            vector<double> next_wp0 = getXY(car_s+30, (2+4*lane), map_waypoints_s, map_waypoints_x, map_waypoints_y);
-            vector<double> next_wp1 = getXY(car_s+60, (2+4*lane), map_waypoints_s, map_waypoints_x, map_waypoints_y);
-            vector<double> next_wp2 = getXY(car_s+90, (2+4*lane), map_waypoints_s, map_waypoints_x, map_waypoints_y);
+            // In Frenet, add evenly 50m spaced points ahead of the starting reference
+            vector<double> next_wp0 = getXY(car_s+50, (2+4*lane), map_waypoints_s, map_waypoints_x, map_waypoints_y);
+            vector<double> next_wp1= getXY(car_s+100, (2+4*lane), map_waypoints_s, map_waypoints_x, map_waypoints_y);
+            vector<double> next_wp2 = getXY(car_s+150, (2+4*lane), map_waypoints_s, map_waypoints_x, map_waypoints_y);
 
             ptsx.push_back(next_wp0[0]);
             ptsx.push_back(next_wp1[0]);
@@ -444,11 +439,19 @@ int main() {
               // increase or decrease velocity gradually depending on whether the car's too close to something or not
               if(too_close)
               {
-                ref_vel -= 0.224; // 5m/s
+                cout << "ref_vel is " << ref_vel << " and front_car_speed is " << front_car_speed << endl;
+                if(ref_vel > front_car_speed)
+                {
+                  ref_vel -= 0.15;//0.224; // 5m/s
+                }
+                else
+                {
+                  ref_vel = front_car_speed;
+                }
               } 
               else if(ref_vel < 49.5)
               {
-                ref_vel += 0.224;
+                ref_vel += 0.35;//0.224;
               }
 
               double N = (target_dist/(0.02*ref_vel/2.24));
