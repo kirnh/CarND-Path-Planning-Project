@@ -275,42 +275,73 @@ int main() {
             // before trying to reduce speed. 
             if(too_close)
             {
+              // Try left lane first
               int left_lane = lane-1;
-              cout << "left lane " << left_lane << endl;
               if(left_lane >= 0)
               {
                 for(int j=0; j<sensor_fusion.size(); j++)
                 {
-                  cout << "Looping through sensor_fusion: " << j << endl;
                   double d_new = sensor_fusion[j][6];
                   if((d_new < 2+4*left_lane+2) && (d_new > 2+4*left_lane-2))
                   {
-                    cout << "Found a car in left lane at d = " << d_new << endl;
                     double vx_new = sensor_fusion[j][3];
                     double vy_new = sensor_fusion[j][4];
                     double check_speed_new = sqrt(vx_new*vx_new+vy_new*vy_new);
                     double check_car_s_new = sensor_fusion[j][5];
                     check_car_s_new += prev_size * 0.02 * check_speed_new;
-                    // cout << "its s value = " << check_car_s_new << " while ego car is at " << car_s << endl;
 
                     if((check_car_s_new-car_s)*(check_car_s_new-car_s) < 100)
                     {
-                      cout << "Its too close to change lanes" << endl;
                       too_close = true;
                     } 
                     else
                     {
-                      cout << "Prep change left activated" << endl;
                       prep_left_lane_change = true;
                       too_close = false;
                     }
                   }
                 }
               }
+              // Try right lane if left lane is not feasible
+              int right_lane = lane+1;
+              if(right_lane <= 2 && too_close)
+              {
+                for(int j=0; j<sensor_fusion.size(); j++)
+                {
+                  double d_new = sensor_fusion[j][6];
+                  if((d_new < 2+4*right_lane+2) && (d_new > 2+4*right_lane-2))
+                  {
+                    double vx_new = sensor_fusion[j][3];
+                    double vy_new = sensor_fusion[j][4];
+                    double check_speed_new = sqrt(vx_new*vx_new+vy_new*vy_new);
+                    double check_car_s_new = sensor_fusion[j][5];
+                    check_car_s_new += prev_size * 0.02 * check_speed_new;
+
+                    if((check_car_s_new-car_s)*(check_car_s_new-car_s) < 100)
+                    {
+                      too_close = true;
+                    } 
+                    else
+                    {
+                      prep_right_lane_change = true;
+                      too_close = false;
+                    }
+                  }
+                }
+              }
+              // Change lane depeding on the decision made
               if(prep_left_lane_change)
-                {lane = 2;}
+                {
+                  lane = left_lane;
+                }
+              else if(prep_right_lane_change)
+              {
+                lane = right_lane;
+              }
               else if(ref_vel < 49.5)
-                {ref_vel += 0.224;}
+                {
+                  ref_vel += 0.224;
+                }
             }
             // Create a list of widely spaced (x, y) waypoints, evenly spaced at 30m
             // later we will interpolate these waypoints with a spline and fill it with
