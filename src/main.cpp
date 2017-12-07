@@ -250,6 +250,8 @@ int main() {
           	
             // Code to predict the traffic
             bool too_close = false;
+            bool prep_left_lane_change = false;
+            bool prep_right_lane_change = false;
 
             for(int i = 0; i < sensor_fusion.size(); i++)
             {
@@ -262,23 +264,54 @@ int main() {
                 double check_car_s = sensor_fusion[i][5];
                 check_car_s += prev_size * 0.02 * check_speed;
 
-                if((check_car_s > car_s) && (check_car_s - car_s) < 30)
+                if((check_car_s > car_s) && (check_car_s - car_s) < 40)
                 {
-                  //ref_vel = 29.5;
                   too_close = true;
                 }
               }
             }
 
-            // if(too_close)
-            // {
-            //   ref_vel -= 0.224;
-            // }
-            // else if(ref_vel < 49.5)
-            // {
-            //   ref_vel += 0.224;
-            // }
+            // If ego car is too close to any other object in its lane, try changing lane 
+            // before trying to reduce speed. 
+            if(too_close)
+            {
+              int left_lane = lane-1;
+              cout << "left lane " << left_lane << endl;
+              if(left_lane >= 0)
+              {
+                for(int j=0; j<sensor_fusion.size(); j++)
+                {
+                  cout << "Looping through sensor_fusion: " << j << endl;
+                  double d_new = sensor_fusion[j][6];
+                  if((d_new < 2+4*left_lane+2) && (d_new > 2+4*left_lane-2))
+                  {
+                    cout << "Found a car in left lane at d = " << d_new << endl;
+                    double vx_new = sensor_fusion[j][3];
+                    double vy_new = sensor_fusion[j][4];
+                    double check_speed_new = sqrt(vx_new*vx_new+vy_new*vy_new);
+                    double check_car_s_new = sensor_fusion[j][5];
+                    check_car_s_new += prev_size * 0.02 * check_speed_new;
+                    // cout << "its s value = " << check_car_s_new << " while ego car is at " << car_s << endl;
 
+                    if((check_car_s_new-car_s)*(check_car_s_new-car_s) < 100)
+                    {
+                      cout << "Its too close to change lanes" << endl;
+                      too_close = true;
+                    } 
+                    else
+                    {
+                      cout << "Prep change left activated" << endl;
+                      prep_left_lane_change = true;
+                      too_close = false;
+                    }
+                  }
+                }
+              }
+              if(prep_left_lane_change)
+                {lane = 2;}
+              else if(ref_vel < 49.5)
+                {ref_vel += 0.224;}
+            }
             // Create a list of widely spaced (x, y) waypoints, evenly spaced at 30m
             // later we will interpolate these waypoints with a spline and fill it with
             // more points that control speed.
