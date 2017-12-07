@@ -277,6 +277,8 @@ int main() {
             {
               // Try left lane first
               int left_lane = lane-1;
+              int total_ll_cars = 0;
+              int distant_ll_cars = 0;
               if(left_lane >= 0)
               {
                 for(int j=0; j<sensor_fusion.size(); j++)
@@ -284,26 +286,24 @@ int main() {
                   double d_new = sensor_fusion[j][6];
                   if((d_new < 2+4*left_lane+2) && (d_new > 2+4*left_lane-2))
                   {
+                    total_ll_cars += 1;
                     double vx_new = sensor_fusion[j][3];
                     double vy_new = sensor_fusion[j][4];
                     double check_speed_new = sqrt(vx_new*vx_new+vy_new*vy_new);
                     double check_car_s_new = sensor_fusion[j][5];
                     check_car_s_new += prev_size * 0.02 * check_speed_new;
 
-                    if((check_car_s_new-car_s)*(check_car_s_new-car_s) < 100)
+                    if(not((check_car_s_new-car_s)*(check_car_s_new-car_s) < 400))
                     {
-                      too_close = true;
+                      distant_ll_cars += 1;
                     } 
-                    else
-                    {
-                      prep_left_lane_change = true;
-                      too_close = false;
-                    }
                   }
                 }
               }
               // Try right lane if left lane is not feasible
               int right_lane = lane+1;
+              int total_rl_cars = 0;
+              int distant_rl_cars = 0;
               if(right_lane <= 2 && too_close)
               {
                 for(int j=0; j<sensor_fusion.size(); j++)
@@ -311,32 +311,32 @@ int main() {
                   double d_new = sensor_fusion[j][6];
                   if((d_new < 2+4*right_lane+2) && (d_new > 2+4*right_lane-2))
                   {
+                    total_rl_cars += 1;
                     double vx_new = sensor_fusion[j][3];
                     double vy_new = sensor_fusion[j][4];
                     double check_speed_new = sqrt(vx_new*vx_new+vy_new*vy_new);
                     double check_car_s_new = sensor_fusion[j][5];
                     check_car_s_new += prev_size * 0.02 * check_speed_new;
 
-                    if((check_car_s_new-car_s)*(check_car_s_new-car_s) < 100)
+                    if(not((check_car_s_new-car_s)*(check_car_s_new-car_s) < 400))
                     {
-                      too_close = true;
+                      distant_rl_cars += 1;
                     } 
-                    else
-                    {
-                      prep_right_lane_change = true;
-                      too_close = false;
-                    }
                   }
                 }
               }
               // Change lane depeding on the decision made
-              if(prep_left_lane_change)
+              if(distant_ll_cars == total_ll_cars)
                 {
                   lane = left_lane;
+                  // change the value of distant_rl_cars since we already decided on left lane
+                  distant_rl_cars = 99999999; //some high value
+                  too_close = false;
                 }
-              else if(prep_right_lane_change)
+              if(distant_rl_cars == total_rl_cars)
               {
                 lane = right_lane;
+                too_close = false;
               }
               else if(ref_vel < 49.5)
                 {
@@ -441,9 +441,10 @@ int main() {
             for(int i=1; i <= 50 - previous_path_x.size(); i++)
             {
 
-              // increase or decrease velocity gradually depending on whether the car's too close to something else or not
+              // increase or decrease velocity gradually depending on whether the car's too close to something or not
               if(too_close)
               {
+                cout << "Too close!" << endl;
                 ref_vel -= 0.224; // 5m/s
               } 
               else if(ref_vel < 49.5)
