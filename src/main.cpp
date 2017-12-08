@@ -434,7 +434,6 @@ int main() {
             // Fill the rest of our path planner after filling it with previous points,
             // here we will always output 50 points
             // Also for reference: 1 mph = 1/2.24 m/s = 0.44704 m/s
-            cout << "Adding " << 50 - previous_path_x.size() << "points in this iteration...";
             for(int i=1; i <= 50 - previous_path_x.size(); i++)
             {
               // increase or decrease velocity gradually depending on whether the car's too close to something or not
@@ -442,7 +441,7 @@ int main() {
               {
                 if(ref_vel > front_car_speed)
                 {
-                  ref_vel -= 0.08; // 5m/s
+                  ref_vel -= 0.1;
                 }
                 else
                 {
@@ -453,7 +452,6 @@ int main() {
               {
                 ref_vel += 0.35;
               }
-              cout << ref_vel << endl;
 
               double N = (target_dist/(0.02*ref_vel/2.24));
               double x_point = x_add_on+(target_x)/N;
