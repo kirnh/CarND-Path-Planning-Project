@@ -416,7 +416,8 @@ int main() {
             vector<double> next_x_vals;
             vector<double> next_y_vals;
 
-            // Start from all of the previous path points from the last time
+            // Start from all of the previous path points from the last time if nothing is in front of the car
+
             for (int i=0; i < previous_path_x.size(); i++)
             {
               next_x_vals.push_back(previous_path_x[i]);
@@ -433,16 +434,15 @@ int main() {
             // Fill the rest of our path planner after filling it with previous points,
             // here we will always output 50 points
             // Also for reference: 1 mph = 1/2.24 m/s = 0.44704 m/s
+            cout << "Adding " << 50 - previous_path_x.size() << "points in this iteration...";
             for(int i=1; i <= 50 - previous_path_x.size(); i++)
             {
-
               // increase or decrease velocity gradually depending on whether the car's too close to something or not
               if(too_close)
               {
-                cout << "ref_vel is " << ref_vel << " and front_car_speed is " << front_car_speed << endl;
                 if(ref_vel > front_car_speed)
                 {
-                  ref_vel -= 0.15;//0.224; // 5m/s
+                  ref_vel -= 0.08; // 5m/s
                 }
                 else
                 {
@@ -451,8 +451,9 @@ int main() {
               } 
               else if(ref_vel < 49.5)
               {
-                ref_vel += 0.35;//0.224;
+                ref_vel += 0.35;
               }
+              cout << ref_vel << endl;
 
               double N = (target_dist/(0.02*ref_vel/2.24));
               double x_point = x_add_on+(target_x)/N;
